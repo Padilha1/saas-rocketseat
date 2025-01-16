@@ -1,6 +1,6 @@
 {
   "extends": "@saas/ts-config/node.json",
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "@types/*.d.ts"],
   "compilerOptions": {
     "paths": {
       "@auth/*": ["./src/http/routes/auth/*"],

@@ -14,6 +14,16 @@ import { errorHandler } from '@/http/error-handler'
 import { createAccount } from '@auth/create-account'
 import { authenticateWithPassword } from '@auth/authenticate-with-password'
 import { getProfile } from '@/http/routes/auth/get-profile'
+import { requestPasswordRecover } from '@auth/request-password-recover'
+import { resetPassword } from '@auth/reset-password'
+import { authenticateWithGithub } from '@auth/authenticate-with-github'
+import { env } from '@saas/env'
+import { createOrganization } from './routes/orgs/create-organization'
+import { getMembership } from './routes/orgs/get-membership'
+import { getOrganization } from './routes/orgs/get-organization'
+import { getOrganizations } from './routes/orgs/get-organizations'
+import { updateOrganization } from './routes/orgs/update-organization'
+import { shutdownOrganization } from './routes/orgs/shutdown-organization'
 
 const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -29,7 +39,15 @@ app.register(fastifySwagger, {
       description: 'Fullstack SaaS App with multi-tenat & RBAC ',
       version: '1.0.0',
     },
-    servers: [],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   },
   transform: jsonSchemaTransform,
 })
@@ -38,7 +56,7 @@ app.register(fastifySwaggerUI, {
   routePrefix: '/docs',
 })
 app.register(fastifyJwt, {
-  secret: 'my-jwt-secret',
+  secret: env.JWT_SECRET,
 })
 
 app.register(fastifyCors)
@@ -46,7 +64,17 @@ app.register(fastifyCors)
 app.register(createAccount)
 app.register(authenticateWithPassword)
 app.register(getProfile)
+app.register(requestPasswordRecover)
+app.register(resetPassword)
+app.register(authenticateWithGithub)
 
-app.listen({ port: 3333 }).then(() => {
+app.register(createOrganization)
+app.register(getMembership)
+app.register(getOrganization)
+app.register(getOrganizations)
+app.register(updateOrganization)
+app.register(shutdownOrganization)
+
+app.listen({ port: env.SERVER_PORT }).then(() => {
   console.log('HTTP server running')
 })
