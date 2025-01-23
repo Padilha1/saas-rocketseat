@@ -5,22 +5,22 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 import { UnauthorizedError } from '../_errors/unauthorized-error'
-import { projectSchema } from '@saas/auth'
+import { BadRequestError } from '../_errors/bad-request-error'
 
-export async function deleteProject(app: FastifyInstance) {
+export async function revokeInvite(app: FastifyInstance) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
-    .delete(
-      '/organizations/:slug/projectId',
+    .post(
+      '/organizations/:slug/invites/:inviteId',
       {
         schema: {
-          tags: ['Project'],
-          summary: 'Delete a Project',
+          tags: ['Invites'],
+          summary: ' Revoke an Invite',
           security: [{ bearerAuth: [] }],
           params: z.object({
             slug: z.string(),
-            projectId: z.string().uuid(),
+            inviteId: z.string().uuid(),
           }),
           response: {
             204: z.null(),
@@ -29,29 +29,24 @@ export async function deleteProject(app: FastifyInstance) {
       },
       async (request, reply) => {
         const userId = await request.getCurrentUserId()
-        const { slug, projectId } = request.params
+        const { slug, inviteId } = request.params
         const { organization, membership } =
           await request.getUserMembership(slug)
 
-        const project = await prisma.project.findUnique({
-          where: {
-            id: projectId,
-            organizationId: organization.id,
-          },
-        })
-
         const { cannot } = getUserPermissions(userId, membership.role)
-        const authProject = projectSchema.parse(organization)
-
-        if (cannot('delete', authProject)) {
-          throw new UnauthorizedError(
-            `You're not allowed to delete this project.`
-          )
+        if (cannot('delete', 'Invite')) {
+          throw new UnauthorizedError(`You're not allowed to delete an Invite.`)
         }
 
-        await prisma.project.delete({
+        const invite = await prisma.invite.findUnique({
+          where: { id: inviteId, organizationId: organization.id },
+        })
+
+        if (!invite) throw new BadRequestError(`Invite not found`)
+
+        await prisma.invite.delete({
           where: {
-            id: projectId,
+            id: inviteId,
           },
         })
 
