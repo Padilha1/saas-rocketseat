@@ -12,21 +12,18 @@ export async function getOrganizations(app: FastifyInstance) {
     .withTypeProvider<ZodTypeProvider>()
     .register(auth)
     .get(
-      '/organizations/',
+      '/organizations',
       {
         schema: {
           tags: ['Organizations'],
           summary: 'Get organizations where User is Member',
           security: [{ bearerAuth: [] }],
-          params: z.object({
-            slug: z.string(),
-          }),
           response: {
             200: z.object({
               organizations: z.array(
                 z.object({
-                  name: z.string().uuid(),
-                  id: z.string(),
+                  name: z.string(),
+                  id: z.string().uuid(),
                   slug: z.string(),
                   avatarUrl: z.string().url().nullable(),
                   role: roleSchema,
