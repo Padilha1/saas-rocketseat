@@ -1,10 +1,7 @@
-import { Header } from '@/components/header'
-
 export default async function Projects() {
   return (
     <div className="py-4">
-      <Header />
-      <main></main>
+      <main>Projeto da Org</main>
     </div>
   )
 }
